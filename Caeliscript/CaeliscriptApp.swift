@@ -13,7 +13,7 @@ struct CaeliscriptApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            CelestialView()
                 .environment(\.managedObjectContext, persistenceController.container.viewContext)
         }
     }

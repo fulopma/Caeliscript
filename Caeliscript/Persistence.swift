@@ -51,6 +51,9 @@ struct PersistenceController {
                  */
                 fatalError("Unresolved error \(error), \(error.userInfo)")
             }
+            #if DEBUG
+            print(storeDescription.url?.absoluteString.removingPercentEncoding ?? "No filepath")
+            #endif
         })
         container.viewContext.automaticallyMergesChangesFromParent = true
     }
