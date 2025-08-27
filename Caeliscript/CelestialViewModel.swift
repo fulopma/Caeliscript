@@ -14,7 +14,15 @@ final class CelestialViewModel: ObservableObject {
         self.networkLayer = networkLayer
         repoLayer = LocalCelestialRepoLayer(context: PersistenceController.shared.container.viewContext)
         #if DEBUG
-        addExampleData()
+        do {
+            try repoLayer.removeNonPersisentImages()
+            if try repoLayer.getCelestialBodiesSorted().count == 0 {
+                addExampleData()
+            }
+        }
+        catch {
+            print("Error fetching celestial bodies: \(error)")
+        }
         #endif
         do {
             celestialBodies = try repoLayer.getCelestialBodiesSorted()
