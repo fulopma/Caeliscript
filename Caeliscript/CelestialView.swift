@@ -12,88 +12,118 @@ struct CelestialView: View {
     @StateObject var viewModel = CelestialViewModel()
     var body: some View {
         NavigationStack {
-            List(viewModel.celestialBodies) { celestialBody in
-                VStack(alignment: .center) {
-                    Text(celestialBody.name ?? "")
-                    let images: [CelestialImage] = celestialBody.associatedImages?.sortedArray(using:
-                        [NSSortDescriptor(key: "id", ascending: false)]
-                    )
-                    as? [CelestialImage] ?? []
-                    List{
-                        ScrollView(.horizontal) {
-                            HStack{
-                                ForEach(images) { image in
-                                    CelestialImageView(image: image, viewModel: viewModel)
+            ScrollView {
+                LazyVStack(spacing: 24) {
+                    ForEach(viewModel.celestialBodies) { celestialBody in
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text(celestialBody.name ?? "Unknown Body")
+                                .font(.title2)
+                                .fontWeight(.semibold)
+                                .padding(.bottom, 4)
+                            let images: [CelestialImage] = celestialBody.associatedImages?.sortedArray(using:
+                                [NSSortDescriptor(key: "id", ascending: false)]
+                            ) as? [CelestialImage] ?? []
+                            if !images.isEmpty {
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    LazyHStack(spacing: 16) {
+                                        ForEach(images) { image in
+                                            CelestialCellImageView(image: image, viewModel: viewModel)
+                                        }
+                                    }
+                                    .padding(.vertical, 8)
                                 }
+                                .frame(height: 320)
+                            } else {
+                                Text("No images available.")
+                                    .font(.subheadline)
+                                    .foregroundColor(.gray)
                             }
                         }
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(16)
+                        .shadow(color: Color(.systemGray3), radius: 4, x: 0, y: 2)
                     }
-                    .frame(height: 400)
                 }
-                .padding(0)
+                .padding()
             }
+            .navigationTitle("Celestial Bodies")
         }
     }
 }
-struct CelestialImageView: View {
+
+struct CelestialCellImageView: View {
     let image: CelestialImage
     var viewModel: CelestialViewModel
     var UIImage: UIImage?
-    @State var isLoading: Bool = true
+    @State var isLoading = true
     @State var isPersisted: Bool
+    @State var showFullImage = false
     init(image: CelestialImage, viewModel: CelestialViewModel) {
         self.image = image
         self.viewModel = viewModel
         isPersisted = image.shouldPersist
     }
     var body: some View {
-        VStack {
-            Text("\(image.license ?? "") \(image.creater ?? "")")
-                .font(.caption)
-            if !isLoading{
-                ZStack(alignment: .bottomTrailing){
-                    Image(uiImage: (UIKit.UIImage(data: image.imageData!) ?? UIKit.UIImage(systemName: "questionmark"))!)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 250, height: 270)
-                        .clipped()
+        NavigationStack{
+            VStack(alignment: .leading, spacing: 8) {
+                ZStack(alignment: .bottomTrailing) {
+                    Group {
+                        if !isLoading {
+                            Image(uiImage: (UIKit.UIImage(data: image.imageData!) ?? UIKit.UIImage(systemName: "questionmark"))!)
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 220, height: 220)
+                                .clipped()
+                                .cornerRadius(12)
+                        } else {
+                            ProgressView()
+                                .frame(width: 220, height: 220)
+                        }
+                    }
                     Button(action: {
-                        // shouldPersist does not support binding
-                        // which is why we need a duplicate data that basically copies
-                        // shouldPersist but supports reactive programming
                         image.shouldPersist.toggle()
                         isPersisted = image.shouldPersist
                     }, label: {
-                        if !isPersisted {
-                            Image(systemName: "arrow.down.circle")
-                                .resizable()
-                                .frame(width: 20, height: 20)
-                                .padding(10)
-                        }
-                        else {
-                            Image(systemName: "checkmark.circle.fill")
-                                .resizable()
-                                .frame(width: 20, height: 20)
-                                .padding(10)
-                        }
+                        Image(systemName: image.shouldPersist ? "checkmark.circle.fill" : "arrow.down.circle")
+                            .resizable()
+                            .frame(width: 28, height: 28)
+                            .foregroundColor(isPersisted ? .green : .blue)
+                            .background(Color.white.opacity(0.8))
+                            .clipShape(Circle())
+                            .shadow(radius: 2)
+                            .padding(8)
                     })
                 }
+                Text(image.license ?? "")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Text(image.creater ?? "")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                Button(action: {
+                    showFullImage = true
+                }, label: {
+                    Text("Show Full Image")
+                })
+                .navigationDestination(isPresented: $showFullImage, destination: {
+                    CelestialFullImageView(image)
+                })
             }
-            else {
-                ProgressView()
-                    .frame(width: 200, height: 270)
-            }
-        }
-        .padding(10)
-        .task {
-            if ( image.imageData == nil) {
-                Task {
-                    await viewModel.getImageData(for: image)
+            .frame(width: 220)
+            .padding(8)
+            .background(Color(.systemBackground))
+            .cornerRadius(12)
+            .shadow(color: Color(.systemGray3), radius: 2, x: 0, y: 1)
+            .task {
+                if (image.imageData == nil) {
+                    Task {
+                        await viewModel.getImageData(for: image)
+                        isLoading = false
+                    }
+                } else {
                     isLoading = false
                 }
-            }
-            else {
-                isLoading = false
             }
         }
     }
