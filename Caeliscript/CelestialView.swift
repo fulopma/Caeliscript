@@ -42,7 +42,7 @@ struct CelestialView: View {
                         .padding()
                         .background(Color(.systemGray6))
                         .cornerRadius(16)
-                        .shadow(color: Color(.systemGray3), radius: 4, x: 0, y: 2)
+                    //    .shadow(color: Color(.systemGray3), radius: 4, x: 0, y: 2)
                     }
                 }
                 .padding()
@@ -67,10 +67,12 @@ struct CelestialCellImageView: View {
     var body: some View {
         NavigationStack{
             VStack(alignment: .leading, spacing: 8) {
-                ZStack(alignment: .bottomTrailing) {
-                    Group {
+                ZStack(alignment: .topTrailing) {
+                    
+                    
                         if !isLoading {
-                            Image(uiImage: (UIKit.UIImage(data: image.imageData!) ?? UIKit.UIImage(systemName: "questionmark"))!)
+                            let uiCelestialImage = image.imageData != nil ? (UIKit.UIImage(data: image.imageData!)) : UIKit.UIImage(systemName: "network.slash")
+                            Image(uiImage: uiCelestialImage!)
                                 .resizable()
                                 .aspectRatio(contentMode: .fill)
                                 .frame(width: 220, height: 220)
@@ -80,10 +82,10 @@ struct CelestialCellImageView: View {
                             ProgressView()
                                 .frame(width: 220, height: 220)
                         }
-                    }
                     Button(action: {
                         image.shouldPersist.toggle()
                         isPersisted = image.shouldPersist
+                        print(image.shouldPersist)
                     }, label: {
                         Image(systemName: image.shouldPersist ? "checkmark.circle.fill" : "arrow.down.circle")
                             .resizable()
@@ -91,7 +93,7 @@ struct CelestialCellImageView: View {
                             .foregroundColor(isPersisted ? .green : .blue)
                             .background(Color.white.opacity(0.8))
                             .clipShape(Circle())
-                            .shadow(radius: 2)
+                            //.shadow(radius: 2)
                             .padding(8)
                     })
                 }
@@ -114,7 +116,7 @@ struct CelestialCellImageView: View {
             .padding(8)
             .background(Color(.systemBackground))
             .cornerRadius(12)
-            .shadow(color: Color(.systemGray3), radius: 2, x: 0, y: 1)
+        //    .shadow(color: Color(.systemGray3), radius: 2, x: 0, y: 1)
             .task {
                 if (image.imageData == nil) {
                     Task {

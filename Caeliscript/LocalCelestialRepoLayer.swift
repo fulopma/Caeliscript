@@ -6,6 +6,7 @@
 //
 
 import CoreData
+import SwiftData
 
 final class LocalCelestialRepoLayer {
     private let context: NSManagedObjectContext
@@ -115,10 +116,13 @@ final class LocalCelestialRepoLayer {
         }
     }
     func removeNonPersisentImages() throws {
-        let request: NSFetchRequest<CelestialImage> = CelestialImage.fetchRequest()
-        request.predicate = NSPredicate(format: "shouldPersist = %@", false)
-        try context.fetch(request).forEach {
-            $0.imageData = nil
+        let fetchRequest: NSFetchRequest<CelestialImage> = CelestialImage.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "shouldPersist == %@", NSNumber(value: false))
+        let images = try context.fetch(fetchRequest)
+        for image in images {
+            image.imageData = nil
         }
+        try saveContext()
+        
     }
 }

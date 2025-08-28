@@ -17,7 +17,11 @@ struct CelestialFullImageView: View {
         self.celestialImage = celestialImage
         isPersisted = celestialImage.shouldPersist
         declination = (celestialImage.associatedBody?.declination)!
-        uiImage = Image(uiImage: UIImage(data: celestialImage.imageData!)!)
+        guard let ciData = celestialImage.imageData else {
+            uiImage = Image(systemName: "questionmark")
+            return
+        }
+        uiImage = Image(uiImage: UIImage(data: ciData)!)
     }
     var body: some View {
         VStack {
@@ -31,7 +35,6 @@ struct CelestialFullImageView: View {
                 isPersisted = celestialImage.shouldPersist
             }, label: {
                 Image(systemName: isPersisted ? "checkmark.circle.fill" : "arrow.down.circle")
-
                     .frame(width: 28, height: 28)
             })
         }

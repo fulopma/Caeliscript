@@ -70,13 +70,4 @@ final class CelestialViewModel: ObservableObject {
             print("\(error)")
         }
     }
-    deinit {
-        // remove data that should not persist
-        do {
-            try repoLayer.removeNonPersisentImages()
-        }
-        catch {
-            print("\(error.localizedDescription)")
-        }
-    }
 }
